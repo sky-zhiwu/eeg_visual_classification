@@ -1,0 +1,40 @@
+# ==================== Python 缓存文件 ====================
+# 字节码文件
+__pycache__/
+*.py[cod]
+*$py.class
+# 编译后的扩展
+*.so
+# Python egg-info
+*.egg-info/
+.eggs/
+# ==================== IDE 配置文件 ====================
+# PyCharm
+.idea/
+# VSCode
+.vscode/
+*.code-workspace
+# ==================== 模型/权重文件 ====================
+*.pth
+*.pt
+*.ckpt
+*.pkl
+*.h5
+# ==================== 数据文件 ====================
+data/
+dataset/
+*.csv
+*.npy
+*.mat
+# ==================== 其他临时文件 ====================
+# 日志
+*.log
+# 系统文件
+.DS_Store  # Mac
+Thumbs.db  # Windows
+# 虚拟环境
+venv/
+env/
+*.env
+# 缓存目录
+.cache/
