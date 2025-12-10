@@ -97,7 +97,8 @@ class EEGDataset:
         eeg = self.data[i]["eeg"].float().t()
         eeg = eeg[opt.time_low:opt.time_high,:]
 
-        if opt.model_type == "model10":
+        if opt.model_type == "EEGChannelNet":
+        # if opt.model_type == "model10":
             eeg = eeg.t()
             eeg = eeg.view(1,128,opt.time_high-opt.time_low)
         # Get label
@@ -134,7 +135,20 @@ class Splitter:
 # Load dataset
 dataset = EEGDataset(opt.eeg_dataset)
 # Create loaders
-loaders = {split: DataLoader(Splitter(dataset, split_path = opt.splits_path, split_num = opt.split_num, split_name = split), batch_size = opt.batch_size, drop_last = True, shuffle = True) for split in ["train", "val", "test"]}
+loaders = {split: DataLoader(Splitter(dataset, split_path = opt.splits_path, split_num = opt.split_num, split_name = split), num_workers=0, pin_memory=False, batch_size = opt.batch_size, drop_last = True, shuffle = True) for split in ["train", "val", "test"]}
+
+print("Testing data loader initialization...")
+try:
+    # 加载训练集第一个批次
+    train_loader = loaders["train"]
+    first_batch = next(iter(train_loader))
+    eeg_data, labels = first_batch
+    print(f"✅ Data loader test passed!")
+    print(f"   - EEG batch shape: {eeg_data.shape}")
+    print(f"   - Label batch shape: {labels.shape}")
+except Exception as e:
+    print(f"❌ Data loader failed: {e}")
+    sys.exit(1)  # 加载失败则退出，避免后续卡住
 
 # Load model
 
@@ -148,6 +162,21 @@ optimizer = getattr(torch.optim, opt.optim)(model.parameters(), lr = opt.learnin
 if not opt.no_cuda:
     model.cuda()
     print("Copied to CUDA")
+
+# ========== 新增：预读取数据，触发DataLoader加载 ==========
+print("Preloading first batch of data...")
+try:
+    # 手动迭代train loader，验证数据加载
+    train_loader = loaders["train"]
+    first_batch = next(iter(train_loader))  # 关键：第一次取数据
+    eeg_data, labels = first_batch
+    print(f"✅ First batch loaded successfully! EEG shape: {eeg_data.shape}")
+except Exception as e:
+    print(f"❌ Failed to load data: {e}")
+    import sys
+    sys.exit(1)  # 加载失败直接退出，避免卡住
+# ========================================================
+
 
 if opt.pretrained_net != '':
         model = torch.load(opt.pretrained_net)
